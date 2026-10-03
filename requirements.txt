@@ -1,0 +1,5 @@
+# Runtime dependencies (compatible ranges; tested with the versions in comments)
+PySide6>=6.7,<7            # tested 6.11.2
+cryptography>=43,<51       # tested 50.0.1
+paramiko>=3.4,<4           # tested 3.5.1
+keyring>=25,<26            # tested 25.7.0

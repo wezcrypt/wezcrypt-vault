@@ -1,0 +1,33 @@
+# OPTIONAL: self-hosted SFTP storage for WezCrypt Vault. Not needed by the desktop app.
+# Usage:  cp .env.example .env  (edit)  &&  docker compose up -d
+services:
+  wezcrypt-sftp:
+    build: .
+    image: wezcrypt-vault-sftp:latest
+    container_name: wezcrypt-sftp
+    restart: unless-stopped
+    ports:
+      - "${SFTP_PORT:-2222}:22"
+    environment:
+      STORAGE_AUTHORIZED_KEY: "${STORAGE_AUTHORIZED_KEY:?set STORAGE_AUTHORIZED_KEY in .env}"
+    volumes:
+      - wezcrypt-data:/data            # encrypted containers only
+      - wezcrypt-hostkeys:/etc/ssh/keys  # keeps the SSH fingerprint stable across restarts
+    read_only: true
+    tmpfs:
+      - /run
+      - /tmp
+      - /etc/ssh/authorized_keys
+    cap_drop: [ALL]
+    cap_add: [CHOWN, SETUID, SETGID, SYS_CHROOT, DAC_OVERRIDE, FOWNER, NET_BIND_SERVICE, KILL]
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "nc", "-z", "127.0.0.1", "22"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  wezcrypt-data:
+  wezcrypt-hostkeys:

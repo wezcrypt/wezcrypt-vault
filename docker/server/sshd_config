@@ -1,0 +1,35 @@
+# WezCrypt Vault storage server: SFTP only, keys only, no root, no forwarding.
+Port 22
+Protocol 2
+HostKey /etc/ssh/keys/ssh_host_ed25519_key
+HostKey /etc/ssh/keys/ssh_host_rsa_key
+
+PermitRootLogin no
+PubkeyAuthentication yes
+AuthorizedKeysFile /etc/ssh/authorized_keys/%u
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PermitEmptyPasswords no
+AuthenticationMethods publickey
+MaxAuthTries 3
+LoginGraceTime 30
+MaxStartups 10:30:60
+AllowUsers storage
+
+AllowTcpForwarding no
+AllowAgentForwarding no
+AllowStreamLocalForwarding no
+X11Forwarding no
+PermitTunnel no
+PermitTTY no
+PermitUserEnvironment no
+GatewayPorts no
+
+KexAlgorithms sntrup761x25519-sha512@openssh.com,curve25519-sha256,curve25519-sha256@libssh.org
+Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com
+MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com
+
+Subsystem sftp internal-sftp
+Match User storage
+    ChrootDirectory /data
+    ForceCommand internal-sftp -d /storage -u 0077

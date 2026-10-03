@@ -1,0 +1,89 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*.*.*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows-release:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          architecture: x64
+
+      - name: Verify tag matches wezcrypt_vault/version.py
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        run: |
+          $v = (python -c "from wezcrypt_vault.version import __version__;print(__version__)").Trim()
+          if ("v$v" -ne "${{ github.ref_name }}") { throw "Tag ${{ github.ref_name }} does not match version $v" }
+
+      - name: Install Inno Setup 6
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) {
+            choco install innosetup --no-progress -y
+          }
+
+      - name: Prepare optional code-signing certificate
+        shell: pwsh
+        env:
+          SIGN_PFX_BASE64: ${{ secrets.WEZCRYPT_SIGN_PFX_BASE64 }}
+        run: |
+          if ($env:SIGN_PFX_BASE64) {
+            $pfx = Join-Path $env:RUNNER_TEMP "sign.pfx"
+            [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:SIGN_PFX_BASE64))
+            "WEZCRYPT_SIGN_PFX=$pfx" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          } else {
+            Write-Host "CODE SIGNING: NOT CONFIGURED (no WEZCRYPT_SIGN_PFX_BASE64 secret)"
+          }
+
+      - name: Test, scan, build EXE + installer, hash
+        shell: pwsh
+        env:
+          WEZCRYPT_SIGN_PFX_PASSWORD: ${{ secrets.WEZCRYPT_SIGN_PFX_PASSWORD }}
+          WEZCRYPT_SIGN_TIMESTAMP: ${{ secrets.WEZCRYPT_SIGN_TIMESTAMP }}
+        run: ./scripts/build_release.ps1 -Python python
+
+      - name: Remove signing certificate
+        if: always()
+        shell: pwsh
+        run: if ($env:WEZCRYPT_SIGN_PFX -and (Test-Path $env:WEZCRYPT_SIGN_PFX)) { Remove-Item -Force $env:WEZCRYPT_SIGN_PFX }
+
+      - name: Source archive
+        shell: pwsh
+        run: git archive --format=zip --prefix=wezcrypt-vault/ -o dist/wezcrypt-vault-source.zip HEAD
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: wezcrypt-vault-windows
+          path: |
+            dist/WezCryptVault.exe
+            dist/WezCryptVault-Setup-*.exe
+            dist/SHA256SUMS.txt
+            dist/wezcrypt-vault-source.zip
+            build/selftest-report.json
+          if-no-files-found: error
+
+      - name: Publish GitHub release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/WezCryptVault.exe
+            dist/WezCryptVault-Setup-*.exe
+            dist/SHA256SUMS.txt
+            dist/wezcrypt-vault-source.zip
+          fail_on_unmatched_files: true

@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wezcrypt-vault"
+dynamic = ["version"]
+description = "Secure Client-Side Encrypted File Storage"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "Proprietary" }
+authors = [{ name = "wezcrypt" }]
+dependencies = [
+    "PySide6>=6.7,<7",
+    "cryptography>=43,<51",
+    "paramiko>=3.4,<4",
+    "keyring>=25,<26",
+]
+
+[project.urls]
+Homepage = "https://wezcrypt.com"
+Repository = "https://github.com/wezcrypt/wezcrypt-vault"
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<10"]
+build = ["pyinstaller>=6.10,<7"]
+
+[project.scripts]
+wezcrypt-vault = "main:main"
+
+[tool.setuptools]
+py-modules = ["main", "selftest"]
+packages = ["crypto", "database", "gui", "security", "services", "storage", "utils", "workers", "wezcrypt_vault"]
+
+[tool.setuptools.dynamic]
+version = { attr = "wezcrypt_vault.version.__version__" }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"

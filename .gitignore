@@ -1,0 +1,42 @@
+# Python / tooling
+.venv/
+.venv-build/
+venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+*.pyo
+*.pyd
+*.spec.bak
+
+# Build output
+build/
+dist/
+
+# Local runtime data (never commit)
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+*.log
+*.part
+*.wezenc
+config.toml
+settings.json
+wezcrypt-recovery-key*.txt
+logs/
+
+# Secrets (never commit)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+*.p12
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+id_ecdsa

@@ -1,0 +1,1 @@
+"""WezCrypt Vault: gui package."""

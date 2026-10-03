@@ -1,0 +1,27 @@
+# WezCrypt Vault example preferences (non-secret).
+#
+# You normally never edit this file: the app writes it from the Settings page to
+#   Windows: %LOCALAPPDATA%\WezCryptVault\config\config.toml
+#   macOS:   ~/Library/Application Support/WezCryptVault/config/config.toml
+#   Linux:   ~/.local/share/wezcrypt-vault/config/config.toml
+#
+# Storage servers are configured as profiles in the app (Setup Wizard / Settings) and stored
+# in the local database. Passwords, key passphrases, API tokens and the master key are NEVER
+# allowed in this file; they live in the OS credential store (Windows Credential Manager).
+# A [server] section from version 1.0 is still read once and migrated into a "Default" profile.
+
+[encryption]
+chunk_size = 8388608        # 8 MiB; allowed 4096 .. 67108864
+key_storage = "manual"      # "manual" (enter key each start) | "os_keyring"
+
+[transfer]
+concurrent_uploads = 2
+verify_upload_readback = true
+auto_delete_temp = true
+
+[privacy]
+log_filenames = false
+clipboard_clear_seconds = 30
+
+[ui]
+dark_mode = true
